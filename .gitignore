@@ -1,0 +1,12 @@
+node_modules
+bower_components
+typings
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+js
+
+public/js
