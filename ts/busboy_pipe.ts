@@ -36,7 +36,6 @@ export function get(options: Options) {
 			req.body = {};
 			let busboy = new Busboy({ headers: req.headers });
 			busboy.on('file', (fieldname:string, file:stream.Readable, filename?:string, encoding?:string, mimetype?:string) => {
-				// file is a readable stream
 				//console.log('File {' + fieldname + '}: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
 				let fileInfo:FileInfo = {filename: filename, encoding: encoding, mimetype: mimetype, length:0};
 				if (!req.body[fieldname]) req.body[fieldname]=[];
@@ -45,7 +44,7 @@ export function get(options: Options) {
 				let ret = options.createWriteStream(fileInfo, req);
 				let writeStream = ret.stream;
 				if (ret.info) fileInfo.info = ret.info;
-				function pipeDone(err) {
+				let pipeDone = (err: any) => {
 					if (err) fileInfo.err = err;
 					num_files_piped++;
 					if (typeof num_files_total === 'number' && num_files_total === num_files_piped) {
@@ -56,7 +55,10 @@ export function get(options: Options) {
 				file.on('data', (data: Buffer) => {
 					fileInfo.length += data.length;
 				});
-				writeStream.on('close', () => {pipeDone(null);});
+				writeStream.on('close', () => {
+					//console.log('one file piped');
+					pipeDone(null);
+				});
 				file.on('error', pipeDone).pipe(writeStream).on('error', pipeDone);
 			});
 			busboy.on('field', (fieldname:string, val:string, fieldnameTruncated, valTruncated, encoding, mimetype) => {

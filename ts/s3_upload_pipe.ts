@@ -25,6 +25,9 @@ export function get(options: Options) : busboyPipe.Options {
             };
             if (options.additonalS3Options) params = _.assignIn(params, options.additonalS3Options);
             let upload: stream.Writable = s3Stream.upload(params);
+            upload.on('uploaded', (details:any) => {
+                upload.emit('close');
+            });
             return {stream: upload, info: params};
         }
     };
