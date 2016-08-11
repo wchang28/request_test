@@ -1,4 +1,4 @@
-import * as busboyPipe from './busboy_pipe';
+import * as busboyPipe from 'busboy-pipe';
 import * as express from 'express';
 import * as fs from 'fs';
 

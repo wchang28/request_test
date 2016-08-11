@@ -1,4 +1,4 @@
-import * as busboyPipe from './busboy_pipe';
+import * as busboyPipe from 'busboy-pipe';
 import * as express from 'express';
 import {S3} from 'aws-sdk';
 import * as _ from 'lodash';
