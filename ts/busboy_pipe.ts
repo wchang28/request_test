@@ -39,16 +39,11 @@ export interface WriteStreamFactory {
 	(params: FilePipeParams) : WriteStreamInfo
 }
 
-export interface BusboyPipeRequestHandler extends express.RequestHandler {
-	eventEmitter: events.EventEmitter;
-}
-
-export function get(writeStreamFactory: WriteStreamFactory) : BusboyPipeRequestHandler {
-	let eventEmitter = new events.EventEmitter();
-	let handler = (req: express.Request, res:express.Response, next: express.NextFunction) => {
+export function get(writeStreamFactory: WriteStreamFactory, eventEmitter?: events.EventEmitter) : express.RequestHandler {
+	return (req: express.Request, res:express.Response, next: express.NextFunction) => {
 		let contentType = req.headers['content-type'];
 		if (req.method.toLowerCase() === 'post' && contentType && contentType.match(/multipart\/form-data/)){
-			eventEmitter.emit('begin-pipping', {req});
+			if (eventEmitter) eventEmitter.emit('begin-pipping', {req});
 			let num_files_piped = 0;
 			let num_files_total:number = null;
 			let counter:number = 0;
@@ -65,16 +60,16 @@ export function get(writeStreamFactory: WriteStreamFactory) : BusboyPipeRequestH
 				if (ret.streamInfo) fileInfo.streamInfo = ret.streamInfo;
 				let pipeDone = (err: any) => {
 					if (err) fileInfo.err = err;
-					eventEmitter.emit('file-piped', {req, fileInfo});
+					if (eventEmitter) eventEmitter.emit('file-piped', {req, fileInfo});
 					num_files_piped++;
 					if (typeof num_files_total === 'number' && num_files_total === num_files_piped) {
-						eventEmitter.emit('end-pipping', {req});
+						if (eventEmitter) eventEmitter.emit('end-pipping', {req});
 						next();
 					}					
 				}
 				file.on('data', (data: Buffer) => {
 					fileInfo.length += data.length;
-					eventEmitter.emit('file-data-rcvd', {req, fileInfo});
+					if (eventEmitter) eventEmitter.emit('file-data-rcvd', {req, fileInfo});
 				});
 				writeStream.on('close', () => {
 					pipeDone(null);
@@ -86,13 +81,10 @@ export function get(writeStreamFactory: WriteStreamFactory) : BusboyPipeRequestH
 			});
 			busboy.on('finish', () => {
 				num_files_total = counter;
-				eventEmitter.emit('total-files-count', {req, count: num_files_total});
+				if (eventEmitter) eventEmitter.emit('total-files-count', {req, count: num_files_total});
 			});
 			req.pipe(busboy);
 		} else
 			next();
 	};
-	let ret:BusboyPipeRequestHandler = <BusboyPipeRequestHandler>handler;
-	ret.eventEmitter = eventEmitter;
-	return ret;
 }

@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as path from 'path';
+import * as events from 'events';
 import * as busboyPipe from './busboy_pipe';
 import * as fileUploadStreamFactory from './file_upload_stream_factory';
 import * as s3UploadStreamFactory from './s3_upload_stream_factory';
@@ -35,14 +36,16 @@ let filePathMaker = (params: busboyPipe.FilePipeParams) : string => {
     return 'c:/upload/' + params.fileInfo.filename;
 }
 
-let fileUploadMiddleware = busboyPipe.get(fileUploadStreamFactory.get({filePathMaker}));
-fileUploadMiddleware.eventEmitter.on('end-pipping', (params: busboyPipe.EventParamsBase) => {
-    console.log('All done');
+let eventEmitter = new events.EventEmitter();
+eventEmitter.on('begin-pipping', (params: busboyPipe.EventParamsBase) => {
+    console.log('Piping started');
+}).on('end-pipping', (params: busboyPipe.EventParamsBase) => {
+    console.log('All done :-)');
 }).on('total-files-count', (params: busboyPipe.FilesCountParams) => {
-    console.log('number of files: ' + params.count);
+    console.log('number of files to pipe: ' + params.count);
 });
 
-app.post('/upload', fileUploadMiddleware, (req: express.Request, res: express.Response) => {
+app.post('/upload', busboyPipe.get(fileUploadStreamFactory.get({filePathMaker}), eventEmitter), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];
@@ -62,7 +65,7 @@ let s3Options: s3UploadStreamFactory.Options = {
     }
 }
 
-app.post('/s3_upload', busboyPipe.get(s3UploadStreamFactory.get(s3Options)), (req: express.Request, res: express.Response) => {
+app.post('/s3_upload', busboyPipe.get(s3UploadStreamFactory.get(s3Options), eventEmitter), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];
