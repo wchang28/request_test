@@ -2,20 +2,10 @@ import * as express from 'express';
 import * as http from 'http';
 import * as path from 'path';
 import * as busboyPipe from './busboy_pipe';
-import * as fs from 'fs';
+import * as fileUploader from './file_upload_pipe';
+import * as s3Uploader from './s3_upload_pipe';
 
 let app = express();
-
-function getFileUploadBusboyPipeOptions(fileUploadHomePath:string) : busboyPipe.Options {
-    let options: busboyPipe.Options = {
-        createWriteStream: (fileInfo: busboyPipe.FileInfo) : busboyPipe.WriteStreamInfo => {
-            let filePath = fileUploadHomePath + '/' + fileInfo.filename;
-            let ws = fs.createWriteStream(filePath);
-            return {stream: ws, info: {filePath: filePath}};
-        }
-    };
-    return options;
-}
 
 app.use('/', express.static(path.join(__dirname, '../public')));
 
@@ -41,7 +31,11 @@ app.post('/upload', (req: express.Request, res: express.Response) => {
 });
 */
 
-app.post('/upload', busboyPipe.get(getFileUploadBusboyPipeOptions('c:/upload')), (req: express.Request, res: express.Response) => {
+let filePathMaker = (fileInfo: busboyPipe.FileInfo, req: express.Request) : string => {
+    return 'c:/upload/' + fileInfo.filename;
+}
+
+app.post('/upload', busboyPipe.get(fileUploader.get({filePathMaker})), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];

@@ -19,7 +19,7 @@ export interface WriteStreamInfo {
 }
 
 export interface Options {
-	createWriteStream: (fileInfo: FileInfo) => WriteStreamInfo;
+	createWriteStream: (fileInfo: FileInfo, req: express.Request) => WriteStreamInfo;
 }
 
 export interface Body {
@@ -42,7 +42,7 @@ export function get(options: Options) {
 				if (!req.body[fieldname]) req.body[fieldname]=[];
 				req.body[fieldname].push(fileInfo);
 				counter++;
-				let ret = options.createWriteStream(fileInfo);
+				let ret = options.createWriteStream(fileInfo, req);
 				let writeStream = ret.stream;
 				if (ret.info) fileInfo.info = ret.info;
 				function pipeDone(err) {

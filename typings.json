@@ -9,6 +9,7 @@
     "request": "registry:npm/request#2.69.0+20160428223725"
   },
   "globalDependencies": {
+    "aws-sdk": "registry:dt/aws-sdk#0.0.0+20160805030905",
     "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",
     "es2015-promise": "registry:env/es2015-promise#1.0.0+20160526151700",
     "express": "registry:dt/express#4.0.0+20160317120654",
