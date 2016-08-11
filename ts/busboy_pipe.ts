@@ -23,7 +23,7 @@ export interface Options {
 }
 
 export interface Body {
-	[field:string]: string | FileInfo
+	[field:string]: string | FileInfo[]
 }
 
 export function get(options: Options) {
@@ -37,9 +37,10 @@ export function get(options: Options) {
 			let busboy = new Busboy({ headers: req.headers });
 			busboy.on('file', (fieldname:string, file:stream.Readable, filename?:string, encoding?:string, mimetype?:string) => {
 				// file is a readable stream
-				//console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+				//console.log('File {' + fieldname + '}: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
 				let fileInfo:FileInfo = {filename: filename, encoding: encoding, mimetype: mimetype, length:0};
-				req.body[fieldname] = fileInfo;
+				if (!req.body[fieldname]) req.body[fieldname]=[];
+				req.body[fieldname].push(fileInfo);
 				counter++;
 				let ret = options.createWriteStream(fileInfo);
 				let writeStream = ret.stream;
