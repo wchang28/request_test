@@ -1,11 +1,27 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as path from 'path';
+import * as busboyPipe './busboy_pipe';
+import * as fs from 'fs';
 
 let app = express();
 
+let fileUploadHomePath = 'c:/upload';
+
+function getFileUploadBusboyPipeOptions(fileUploadHomePath:string) : busboyPipe.Options {
+    let options: busboyPipe.Options = {
+        createWriteStream: (fileInfo: busboyPipe.FileInfo) : busboyPipe.WriteStreamInfo => {
+            let filePath = fileUploadHomePath + '/' + fileInfo.filename;
+            let ws = fs.createWriteStream(filePath);
+            return {stream: ws, info: {filePath: filePath}};
+        }
+    };
+    return options;
+}
+
 app.use('/', express.static(path.join(__dirname, '../public')));
 
+/*
 app.post('/upload', (req: express.Request, res: express.Response) => {
     console.log('headers:');
     console.log('===============================================');
@@ -24,6 +40,15 @@ app.post('/upload', (req: express.Request, res: express.Response) => {
     req.on('end', () => {
         res.json({bytes});
     });
+});
+*/
+
+app.post('/upload', busboyPipe.get(getFileUploadBusboyPipeOptions(fileUploadHomePath)), (req: express.Request, res: express.Response) => {
+    let result:busboyPipe.Body = req.body;
+    for (let field in result) {
+        let value = result[field];
+        console.log(field + ' ===> ' + JSON.stringify(value));
+    }
 });
 
 let secure_http:boolean = false;
