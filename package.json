@@ -8,8 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.5.0",
-    "browser-request": "^0.3.3",
-    "busboy": "^0.2.13",
+    "busboy-pipe": "git+https://github.com/wchang28/busboy-pipe.git",
     "express": "^4.14.0",
     "form-data": "^1.0.0-rc4",
     "lodash": "^4.14.2",
