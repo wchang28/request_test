@@ -41,8 +41,7 @@ class FilesUploadTestApp extends React.Component<FilesUploadTestProps, any> {
         let x: any = this.refs["file"];
         //console.log('x = ' + x.toString());
         let files = x.files;
-        let file = files[0];
-        
+                
         let options:any = {
             url:url
             ,headers: {'x-my-header': '<<**********wen chang************>>'}
@@ -51,8 +50,12 @@ class FilesUploadTestApp extends React.Component<FilesUploadTestProps, any> {
         let formData = new FormData();
         formData.append('FirstName', 'Wen');
         formData.append('LastName', 'Chang');
-        formData.append("Myfile", file, file.name);
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
+            formData.append("Myfile[]", file, file.name);
+        }
 
+        ////////////////////////////////////////////////////////////////////////////////////
         let xhr = new XMLHttpRequest();
         xhr.open('POST', options.url, true);
         for (let f in options.headers)
@@ -67,6 +70,7 @@ class FilesUploadTestApp extends React.Component<FilesUploadTestProps, any> {
             }
         };
         xhr.send(formData);
+        ////////////////////////////////////////////////////////////////////////////////////
         
         e.preventDefault();
     } 
@@ -74,7 +78,7 @@ class FilesUploadTestApp extends React.Component<FilesUploadTestProps, any> {
         return (
             <div>                
                <form ref="uploadForm" encType="multipart/form-data "method="POST" >
-                   <input ref="file" type="file" name="file"/>
+                   <input ref="file" type="file" name="file" multiple={true}/>
                    <input type="button" ref="button" value="Upload" onClick={this.uploadFiles.bind(this)} />
                </form>                
             </div>

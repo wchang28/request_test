@@ -6,8 +6,6 @@ import * as fs from 'fs';
 
 let app = express();
 
-let fileUploadHomePath = 'c:/upload';
-
 function getFileUploadBusboyPipeOptions(fileUploadHomePath:string) : busboyPipe.Options {
     let options: busboyPipe.Options = {
         createWriteStream: (fileInfo: busboyPipe.FileInfo) : busboyPipe.WriteStreamInfo => {
@@ -43,7 +41,7 @@ app.post('/upload', (req: express.Request, res: express.Response) => {
 });
 */
 
-app.post('/upload', busboyPipe.get(getFileUploadBusboyPipeOptions(fileUploadHomePath)), (req: express.Request, res: express.Response) => {
+app.post('/upload', busboyPipe.get(getFileUploadBusboyPipeOptions('c:/upload')), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];
