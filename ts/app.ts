@@ -10,28 +10,6 @@ let app = express();
 
 app.use('/', express.static(path.join(__dirname, '../public')));
 
-/*
-app.post('/upload', (req: express.Request, res: express.Response) => {
-    console.log('headers:');
-    console.log('===============================================');
-    console.log(JSON.stringify(req.headers));
-    console.log('===============================================');
-    console.log('');
-    //req.setEncoding('utf8');
-    let bytes = 0;
-    req.on('data', (data: Buffer) => {
-        bytes += data.length;
-        //process.stdout.write(data.toString());
-        ////console.log("typeof data = " + data.constructor);
-        //console.log("length = " + data.length.toString());
-        //console.log(data);
-    })
-    req.on('end', () => {
-        res.json({bytes});
-    });
-});
-*/
-
 let eventEmitter = new events.EventEmitter();
 eventEmitter.on('begin', (params: busboyPipe.EventParamsBase) => {
     console.log('Piping started');
