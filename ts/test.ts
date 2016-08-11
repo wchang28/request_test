@@ -68,4 +68,6 @@ let r = request.post(options, (err, httpResponse, body) => {
 let form = r.form();
 form.append('FirstName', 'Wen');
 form.append('LastName', 'Chang');
-form.append("Myfile", fs.createReadStream('C:/Users/wchang/Desktop/node-grid-4.zip'), 'node-grid-4.zip');
+form.append("Myfile1", fs.createReadStream('C:/Users/wchang/Desktop/node-grid-4.zip'), 'node-grid-4.zip');
+form.append("Myfile2", fs.createReadStream('C:/Users/wchang/Desktop/signedcorrected 4506-T.pdf'), 'signedcorrected 4506-T.pdf');
+form.append("Myfile3", fs.createReadStream('C:/Users/wchang/Desktop/polaris.txt'), 'polaris.txt');

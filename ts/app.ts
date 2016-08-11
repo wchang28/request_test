@@ -49,7 +49,7 @@ app.post('/upload', busboyPipe.get(getFileUploadBusboyPipeOptions(fileUploadHome
         let value = result[field];
         console.log(field + ' ===> ' + JSON.stringify(value));
     }
-    res.json({});
+    res.json(result);
 });
 
 let secure_http:boolean = false;

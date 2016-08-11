@@ -3,11 +3,14 @@ import * as express from 'express';
 import * as stream from 'stream';
 
 export interface FileInfo {
+	length: number;
+
 	filename?: string;
 	encoding?: string;
 	mimetype?: string;
-	info?: any;
+
 	err?: any;
+	info?: any;
 }
 
 export interface WriteStreamInfo {
@@ -34,8 +37,8 @@ export function get(options: Options) {
 			let busboy = new Busboy({ headers: req.headers });
 			busboy.on('file', (fieldname:string, file:stream.Readable, filename?:string, encoding?:string, mimetype?:string) => {
 				// file is a readable stream
-				console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
-				let fileInfo:FileInfo = {filename: filename, encoding: encoding, mimetype: mimetype};
+				//console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+				let fileInfo:FileInfo = {filename: filename, encoding: encoding, mimetype: mimetype, length:0};
 				req.body[fieldname] = fileInfo;
 				counter++;
 				let ret = options.createWriteStream(fileInfo);
@@ -45,10 +48,13 @@ export function get(options: Options) {
 					if (err) fileInfo.err = err;
 					num_files_piped++;
 					if (typeof num_files_total === 'number' && num_files_total === num_files_piped) {
-						console.log('All files piped');
+						//console.log('All files piped');
 						next();
 					}					
 				}
+				file.on('data', (data: Buffer) => {
+					fileInfo.length += data.length;
+				});
 				writeStream.on('close', () => {pipeDone(null);});
 				file.on('error', pipeDone).pipe(writeStream).on('error', pipeDone);
 			});
@@ -56,7 +62,7 @@ export function get(options: Options) {
 				req.body[fieldname] = val;
 			});
 			busboy.on('finish', () => {
-				console.log('finish(): ' + counter);
+				//console.log('finish(): ' + counter);
 				num_files_total = counter;
 			});
 			req.pipe(busboy);
