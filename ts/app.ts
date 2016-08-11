@@ -2,8 +2,8 @@ import * as express from 'express';
 import * as http from 'http';
 import * as path from 'path';
 import * as busboyPipe from './busboy_pipe';
-import * as fileUploader from './file_upload_pipe';
-import * as s3Uploader from './s3_upload_pipe';
+import * as fileUploadStreamFactory from './file_upload_stream_factory';
+import * as s3UploadStreamFactory from './s3_upload_stream_factory';
 
 let app = express();
 
@@ -31,11 +31,18 @@ app.post('/upload', (req: express.Request, res: express.Response) => {
 });
 */
 
-let filePathMaker = (fileInfo: busboyPipe.FileInfo, req: express.Request) : string => {
-    return 'c:/upload/' + fileInfo.filename;
+let filePathMaker = (params: busboyPipe.FilePipeParams) : string => {
+    return 'c:/upload/' + params.fileInfo.filename;
 }
 
-app.post('/upload', busboyPipe.get(fileUploader.get({filePathMaker})), (req: express.Request, res: express.Response) => {
+let fileUploadMiddleware = busboyPipe.get(fileUploadStreamFactory.get({filePathMaker}));
+fileUploadMiddleware.eventEmitter.on('end-pipping', (params: busboyPipe.EventParamsBase) => {
+    console.log('All done');
+}).on('total-files-count', (params: busboyPipe.FilesCountParams) => {
+    console.log('number of files: ' + params.count);
+});
+
+app.post('/upload', fileUploadMiddleware, (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];
@@ -44,10 +51,10 @@ app.post('/upload', busboyPipe.get(fileUploader.get({filePathMaker})), (req: exp
     res.json(result);
 });
 
-let s3Options: s3Uploader.Options = {
+let s3Options: s3UploadStreamFactory.Options = {
     "Bucket": 's3-fkh-tst'
-    ,"KeyMaker": (fileInfo: busboyPipe.FileInfo, req: express.Request): string => {
-        return 'busboy_upload/' + fileInfo.filename;
+    ,"KeyMaker": (params: busboyPipe.FilePipeParams): string => {
+        return 'busboy_upload/' + params.fileInfo.filename;
     }
     ,"additonalS3Options": {
         "ACL": "public-read"
@@ -55,7 +62,7 @@ let s3Options: s3Uploader.Options = {
     }
 }
 
-app.post('/s3_upload', busboyPipe.get(s3Uploader.get(s3Options)), (req: express.Request, res: express.Response) => {
+app.post('/s3_upload', busboyPipe.get(s3UploadStreamFactory.get(s3Options)), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];

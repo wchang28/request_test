@@ -1,6 +1,7 @@
 let Busboy = require('busboy');
 import * as express from 'express';
 import * as stream from 'stream';
+import * as events from 'events';
 
 export interface FileInfo {
 	length: number;
@@ -10,26 +11,44 @@ export interface FileInfo {
 	mimetype?: string;
 
 	err?: any;
-	info?: any;
+	streamInfo?: any;
 }
 
 export interface WriteStreamInfo {
 	stream: stream.Writable;
-	info?: any;
-}
-
-export interface Options {
-	createWriteStream: (fileInfo: FileInfo, req: express.Request) => WriteStreamInfo;
+	streamInfo?: any;
 }
 
 export interface Body {
 	[field:string]: string | FileInfo[]
 }
 
-export function get(options: Options) {
-	return ((req: express.Request, res:express.Response, next: express.NextFunction) => {
+export interface EventParamsBase {
+	req: express.Request
+}
+
+export interface FilePipeParams extends EventParamsBase {
+	fileInfo: FileInfo;
+}
+
+export interface FilesCountParams extends EventParamsBase {
+	count: number;
+}
+
+export interface WriteStreamFactory {
+	(params: FilePipeParams) : WriteStreamInfo
+}
+
+export interface BusboyPipeRequestHandler extends express.RequestHandler {
+	eventEmitter: events.EventEmitter;
+}
+
+export function get(writeStreamFactory: WriteStreamFactory) : BusboyPipeRequestHandler {
+	let eventEmitter = new events.EventEmitter();
+	let handler = (req: express.Request, res:express.Response, next: express.NextFunction) => {
 		let contentType = req.headers['content-type'];
 		if (req.method.toLowerCase() === 'post' && contentType && contentType.match(/multipart\/form-data/)){
+			eventEmitter.emit('begin-pipping', {req});
 			let num_files_piped = 0;
 			let num_files_total:number = null;
 			let counter:number = 0;
@@ -38,25 +57,26 @@ export function get(options: Options) {
 			busboy.on('file', (fieldname:string, file:stream.Readable, filename?:string, encoding?:string, mimetype?:string) => {
 				//console.log('File {' + fieldname + '}: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
 				let fileInfo:FileInfo = {filename: filename, encoding: encoding, mimetype: mimetype, length:0};
-				if (!req.body[fieldname]) req.body[fieldname]=[];
+				if (!req.body[fieldname]) req.body[fieldname] = [];
 				req.body[fieldname].push(fileInfo);
 				counter++;
-				let ret = options.createWriteStream(fileInfo, req);
+				let ret = writeStreamFactory({req, fileInfo});
 				let writeStream = ret.stream;
-				if (ret.info) fileInfo.info = ret.info;
+				if (ret.streamInfo) fileInfo.streamInfo = ret.streamInfo;
 				let pipeDone = (err: any) => {
 					if (err) fileInfo.err = err;
+					eventEmitter.emit('file-piped', {req, fileInfo});
 					num_files_piped++;
 					if (typeof num_files_total === 'number' && num_files_total === num_files_piped) {
-						//console.log('All files piped');
+						eventEmitter.emit('end-pipping', {req});
 						next();
 					}					
 				}
 				file.on('data', (data: Buffer) => {
 					fileInfo.length += data.length;
+					eventEmitter.emit('file-data-rcvd', {req, fileInfo});
 				});
 				writeStream.on('close', () => {
-					//console.log('one file piped');
 					pipeDone(null);
 				});
 				file.on('error', pipeDone).pipe(writeStream).on('error', pipeDone);
@@ -65,11 +85,14 @@ export function get(options: Options) {
 				req.body[fieldname] = val;
 			});
 			busboy.on('finish', () => {
-				//console.log('finish(): ' + counter);
 				num_files_total = counter;
+				eventEmitter.emit('total-files-count', {req, count: num_files_total});
 			});
 			req.pipe(busboy);
 		} else
 			next();
-	});
+	};
+	let ret:BusboyPipeRequestHandler = <BusboyPipeRequestHandler>handler;
+	ret.eventEmitter = eventEmitter;
+	return ret;
 }
