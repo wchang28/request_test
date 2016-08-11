@@ -4,8 +4,8 @@ import {IncomingMessage} from 'http';
 import * as _ from 'lodash';
 import * as fs from 'fs';
 
-let url = 'http://127.0.0.1:8080/upload';
-//let url = 'http://127.0.0.1:8080/s3_upload';
+//let url = 'http://127.0.0.1:8080/upload';
+let url = 'http://127.0.0.1:8080/s3_upload';
 
 
 //let formData = new FormDataConstructor();
