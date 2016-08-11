@@ -44,6 +44,26 @@ app.post('/upload', busboyPipe.get(fileUploader.get({filePathMaker})), (req: exp
     res.json(result);
 });
 
+let s3Options: s3Uploader.Options = {
+    "Bucket": 's3-fkh-tst'
+    ,"KeyMaker": (fileInfo: busboyPipe.FileInfo, req: express.Request): string => {
+        return 'busboy_upload/' + fileInfo.filename;
+    }
+    ,"additonalS3Options": {
+        "ACL": "public-read"
+        ,"ServerSideEncryption": "AES256"
+    }
+}
+
+app.post('/s3_upload', busboyPipe.get(s3Uploader.get(s3Options)), (req: express.Request, res: express.Response) => {
+    let result:busboyPipe.Body = req.body;
+    for (let field in result) {
+        let value = result[field];
+        console.log(field + ' ===> ' + JSON.stringify(value));
+    }
+    res.json(result);
+});
+
 let secure_http:boolean = false;
 let server: http.Server = http.createServer(app);
 
