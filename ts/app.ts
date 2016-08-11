@@ -32,18 +32,18 @@ app.post('/upload', (req: express.Request, res: express.Response) => {
 });
 */
 
-let filePathMaker = (params: busboyPipe.FilePipeParams) : string => {
-    return 'c:/upload/' + params.fileInfo.filename;
-}
-
 let eventEmitter = new events.EventEmitter();
-eventEmitter.on('begin-pipping', (params: busboyPipe.EventParamsBase) => {
+eventEmitter.on('begin', (params: busboyPipe.EventParamsBase) => {
     console.log('Piping started');
-}).on('end-pipping', (params: busboyPipe.EventParamsBase) => {
+}).on('end', (params: busboyPipe.EventParamsBase) => {
     console.log('All done :-)');
 }).on('total-files-count', (params: busboyPipe.FilesCountParams) => {
     console.log('number of files to pipe: ' + params.count);
 });
+
+let filePathMaker = (params: busboyPipe.FilePipeParams) : string => {
+    return 'c:/upload/' + params.fileInfo.filename;
+}
 
 app.post('/upload', busboyPipe.get(fileUploadStreamFactory.get({filePathMaker}), eventEmitter), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;

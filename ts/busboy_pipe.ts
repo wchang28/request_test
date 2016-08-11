@@ -39,11 +39,13 @@ export interface WriteStreamFactory {
 	(params: FilePipeParams) : WriteStreamInfo
 }
 
+// supports the following events
+// 1. 
 export function get(writeStreamFactory: WriteStreamFactory, eventEmitter?: events.EventEmitter) : express.RequestHandler {
 	return (req: express.Request, res:express.Response, next: express.NextFunction) => {
 		let contentType = req.headers['content-type'];
 		if (req.method.toLowerCase() === 'post' && contentType && contentType.match(/multipart\/form-data/)){
-			if (eventEmitter) eventEmitter.emit('begin-pipping', {req});
+			if (eventEmitter) eventEmitter.emit('begin', {req});
 			let num_files_piped = 0;
 			let num_files_total:number = null;
 			let counter:number = 0;
@@ -63,7 +65,7 @@ export function get(writeStreamFactory: WriteStreamFactory, eventEmitter?: event
 					if (eventEmitter) eventEmitter.emit('file-piped', {req, fileInfo});
 					num_files_piped++;
 					if (typeof num_files_total === 'number' && num_files_total === num_files_piped) {
-						if (eventEmitter) eventEmitter.emit('end-pipping', {req});
+						if (eventEmitter) eventEmitter.emit('end', {req});
 						next();
 					}					
 				}
