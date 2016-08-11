@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as path from 'path';
-import * as busboyPipe './busboy_pipe';
+import * as busboyPipe from './busboy_pipe';
 import * as fs from 'fs';
 
 let app = express();
@@ -49,6 +49,7 @@ app.post('/upload', busboyPipe.get(getFileUploadBusboyPipeOptions(fileUploadHome
         let value = result[field];
         console.log(field + ' ===> ' + JSON.stringify(value));
     }
+    res.json({});
 });
 
 let secure_http:boolean = false;

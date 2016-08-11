@@ -34,7 +34,7 @@ export function get(options: Options) {
 			let busboy = new Busboy({ headers: req.headers });
 			busboy.on('file', (fieldname:string, file:stream.Readable, filename?:string, encoding?:string, mimetype?:string) => {
 				// file is a readable stream
-				//console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+				console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
 				let fileInfo:FileInfo = {filename: filename, encoding: encoding, mimetype: mimetype};
 				req.body[fieldname] = fileInfo;
 				counter++;
@@ -45,17 +45,18 @@ export function get(options: Options) {
 					if (err) fileInfo.err = err;
 					num_files_piped++;
 					if (typeof num_files_total === 'number' && num_files_total === num_files_piped) {
-						//console.log('All files piped');
+						console.log('All files piped');
 						next();
 					}					
 				}
-				file.on('end', () => {pipeDone(null);});
+				writeStream.on('close', () => {pipeDone(null);});
 				file.on('error', pipeDone).pipe(writeStream).on('error', pipeDone);
 			});
 			busboy.on('field', (fieldname:string, val:string, fieldnameTruncated, valTruncated, encoding, mimetype) => {
 				req.body[fieldname] = val;
 			});
 			busboy.on('finish', () => {
+				console.log('finish(): ' + counter);
 				num_files_total = counter;
 			});
 			req.pipe(busboy);
