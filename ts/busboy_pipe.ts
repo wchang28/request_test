@@ -40,7 +40,11 @@ export interface WriteStreamFactory {
 }
 
 // supports the following events
-// 1. 
+// 1. begin (EventParamsBase)
+// 2. end (EventParamsBase)
+// 3. total-files-count (FilesCountParams)
+// 4. file-data-rcvd (FilePipeParams)
+// 5. file-piped (FilePipeParams)
 export function get(writeStreamFactory: WriteStreamFactory, eventEmitter?: events.EventEmitter) : express.RequestHandler {
 	return (req: express.Request, res:express.Response, next: express.NextFunction) => {
 		let contentType = req.headers['content-type'];
