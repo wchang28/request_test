@@ -22,62 +22,29 @@ appApi.use(requestLogger);
 
 appProxy.use('/', express.static(path.join(__dirname, '../public')));
 
-import * as url from 'url';
-import * as _ from 'lodash';
-let apiyUrl:url.Url = url.parse('http://127.0.0.1:8081');
-function ProxyRestApiMiddleware2(req: express.Request, res: express.Response) {
-	let options:http.RequestOptions = {
-		protocol: apiyUrl.protocol
-		,hostname: apiyUrl.hostname
-		,port: parseInt(apiyUrl.port)
-		,method: req.method
-		,path: '/services' + req.path
-	};
-	options.headers = _.assignIn(req.headers);
-	delete options.headers['host'];
-	/*
-	if (req.headers['cache-control']) options.headers['cache-control']=req.headers['cache-control'];
-	if (req.headers['accept']) options.headers['accept']=req.headers['accept'];
-	if (req.headers['content-type']) options.headers['content-type']=req.headers['content-type'];
-	if (req.headers['content-length']) options.headers['content-length']=req.headers['content-length'];
-	options.headers['authorization'] = 'Bearer ' + bearerToken
-	*/
-	let connector = http.request(options, (resp: http.IncomingMessage) => {
-        //console.log('resp.statusCode=' + resp.statusCode);
-		res.writeHead(resp.statusCode, resp.statusMessage, resp.headers);
-		resp.on('error', (err) => {}).pipe(res).on('error', (err) => {});
-	});
-    req.on('error', (err) => {}).pipe(connector).on('error', (err) => {});
-    req.socket.on('close' ,() => {
-        connector.abort();
-    });
-}
-
-//appProxy.use('/services', ProxyRestApiMiddleware2);
-
 import * as httpProxy from 'http-proxy';
 
-function ProxyRestApiMiddleware3(req: express.Request, res: express.Response) {
+function ApiProxyMiddleware(req: express.Request, res: express.Response) {
     let proxy = httpProxy.createProxyServer();
     let options: httpProxy.ServerOptions = {
          target: 'http://127.0.0.1:8081/services'
          ,changeOrigin: true    // change the 'host' header field to target host
     };
     proxy.web(req, res, options);
-    proxy.on('error', (err:any) => {
+    proxy.on('error', (err:any, req: express.Request, res:express.Response) => {
         console.log('proxy error: ' + JSON.stringify(err));
-        res.status(500).jsonp({'error': 'server internal error'});
+        res.status(500).jsonp({'error': 'internal server error'});
     });
     proxy.on('proxyReq', (proxyReq:http.ClientRequest, req: express.Request, res: express.Response, options: httpProxy.ServerOptions) => {
-        console.log('proxyReq()');
+        //console.log('proxyReq()');
         //proxyReq.setHeader('authorization', 'Bearer ' + bearerToken);
     });
     proxy.on('proxyRes', (proxyRes:http.IncomingMessage, req: express.Request, res: express.Response) => {
-        console.log('proxyRes()');
+        //console.log('proxyRes()');
     });
 }
 
-appProxy.use('/services', ProxyRestApiMiddleware3);
+appProxy.use('/services', ApiProxyMiddleware);
 
 /*
 appApi.use('/services/upload', (req: express.Request, res: express.Response) => {
