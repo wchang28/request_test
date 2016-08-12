@@ -1,16 +1,19 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-//let url = '/services/upload';
-let url = '/services/s3_upload';
-
 interface FilesUploadTestProps {
     message: string;
 }
 
-class FilesUploadTestApp extends React.Component<FilesUploadTestProps, any> {
+interface FilesUploadTestState {
+    uploadToS3?: boolean;
+}
+
+class FilesUploadTestApp extends React.Component<FilesUploadTestProps, FilesUploadTestState> {
     constructor(props:FilesUploadTestProps) {
         super(props);
+        this.state = {};
+        this.state.uploadToS3 = false;
     }
     /*
     uploadFiles(e:any) {
@@ -44,7 +47,7 @@ class FilesUploadTestApp extends React.Component<FilesUploadTestProps, any> {
         let files = x.files;
                 
         let options:any = {
-            url:url
+            url: (this.state.uploadToS3 ? '/services/s3_upload' : '/services/upload')
             ,headers: {'x-my-header': '<<**********wen chang************>>'}
         };
 
@@ -74,14 +77,25 @@ class FilesUploadTestApp extends React.Component<FilesUploadTestProps, any> {
         ////////////////////////////////////////////////////////////////////////////////////
         
         e.preventDefault();
+    }
+    handleUploadToS3Change(e) {
+        this.setState({
+            uploadToS3: !this.state.uploadToS3
+        });
     } 
     render() {
         return (
             <div>                
-               <form ref="uploadForm" encType="multipart/form-data "method="POST" >
-                   <input ref="file" type="file" name="file" multiple={true}/>
-                   <input type="button" ref="button" value="Upload" onClick={this.uploadFiles.bind(this)} />
-               </form>                
+                <form ref="uploadForm" encType="multipart/form-data "method="POST" >
+                    <div>
+                        <input type="checkbox" checked={this.state.uploadToS3} onChange={this.handleUploadToS3Change.bind(this)}/>
+                        <label>Upload to S3</label>
+                    </div>
+                    <div>
+                        <input ref="file" type="file" name="file" multiple={true}/>
+                        <input type="button" ref="button" value="Upload" onClick={this.uploadFiles.bind(this)} />
+                    </div>
+                </form>                
             </div>
         );
     }
