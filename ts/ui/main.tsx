@@ -47,7 +47,7 @@ class FilesUploadTestApp extends React.Component<FilesUploadTestProps, FilesUplo
         let files = x.files;
                 
         let options:any = {
-            url: (this.state.uploadToS3 ? '/services/s3_upload' : '/services/upload')
+            url: (this.state.uploadToS3 ? '/services/upload/s3_upload' : '/services/upload/file_upload')
             ,headers: {'x-my-header': '<<**********wen chang************>>'}
         };
 

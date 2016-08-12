@@ -3,9 +3,8 @@ import * as request from 'request';
 import {IncomingMessage} from 'http';
 import * as _ from 'lodash';
 import * as fs from 'fs';
-
-let url = 'http://127.0.0.1:8080/services/upload';
-//let url = 'http://127.0.0.1:8080/services/s3_upload';
+let url = 'http://127.0.0.1:8080/services/upload/file_upload';
+//let url = 'http://127.0.0.1:8080/services/upload/s3_upload';
 
 
 //let formData = new FormDataConstructor();

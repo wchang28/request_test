@@ -32,15 +32,26 @@ function ProxyRestApiMiddleware2(req: express.Request, res: express.Response) {
 	options.headers['authorization'] = 'Bearer ' + bearerToken
 	*/
 	let connector = http.request(options, (resp: http.IncomingMessage) => {
+        //console.log('resp.statusCode=' + resp.statusCode);
 		res.writeHead(resp.statusCode, resp.statusMessage, resp.headers);
-		resp.pipe(res);
+		resp.on('error', (err) => {}).pipe(res).on('error', (err) => {});
 	});
-	req.pipe(connector);
-	req.socket.on('close' ,() => {connector.abort();});
+    req.on('error', (err) => {}).pipe(connector).on('error', (err) => {});
+    req.socket.on('close' ,() => {
+        connector.abort();
+    });
 }
 
 appProxy.use('/services', ProxyRestApiMiddleware2);
 
+/*
+appApi.use('/services/upload', (req: express.Request, res: express.Response) => {
+    req.on('data', (data) => {});
+    req.on("end" ,() => {
+        res.status(401).json({err: 'not authorized'});
+    });
+});
+*/
 
 let eventEmitter = new events.EventEmitter();
 eventEmitter.on('begin', (params: busboyPipe.EventParamsBase) => {
@@ -55,7 +66,7 @@ let filePathMaker = (params: busboyPipe.FilePipeParams) : string => {
     return 'c:/upload/' + params.fileInfo.filename;
 }
 
-appApi.post('/services/upload', busboyPipe.get(fileUploadStreamFactory.get({filePathMaker}), {eventEmitter}), (req: express.Request, res: express.Response) => {
+appApi.post('/services/upload/file_upload', busboyPipe.get(fileUploadStreamFactory.get({filePathMaker}), {eventEmitter}), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];
@@ -75,7 +86,7 @@ let s3Options: s3UploadStreamFactory.Options = {
     }
 }
 
-appApi.post('/services/s3_upload', busboyPipe.get(s3UploadStreamFactory.get(s3Options), {eventEmitter}), (req: express.Request, res: express.Response) => {
+appApi.post('/services/upload/s3_upload', busboyPipe.get(s3UploadStreamFactory.get(s3Options), {eventEmitter}), (req: express.Request, res: express.Response) => {
     let result:busboyPipe.Body = req.body;
     for (let field in result) {
         let value = result[field];
