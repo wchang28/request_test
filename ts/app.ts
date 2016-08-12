@@ -53,12 +53,12 @@ function ProxyRestApiMiddleware3(req: express.Request, res: express.Response) {
         console.log('proxy error: ' + JSON.stringify(err));
         res.status(500).jsonp({'error': 'server internal error'});
     });
-    proxy.on('proxyReq', function(proxyReq:http.ClientRequest, req: express.Request, res: express.Response, options: httpProxy.ServerOptions) {
+    proxy.on('proxyReq', (proxyReq:http.ClientRequest, req: express.Request, res: express.Response, options: httpProxy.ServerOptions) => {
+        console.log('proxyReq()');
         //proxyReq.setHeader('authorization', 'Bearer ' + bearerToken);
         proxyReq.removeHeader('host');
-        console.log('proxyReq()');
     });
-    proxy.on('proxyRes', function(proxyRes:http.IncomingMessage, req: express.Request, res: express.Response) {
+    proxy.on('proxyRes', (proxyRes:http.IncomingMessage, req: express.Request, res: express.Response) => {
         console.log('proxyRes()');
     });
 }
