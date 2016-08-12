@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-//let url = '/upload';
-let url = '/s3_upload';
+//let url = '/services/upload';
+let url = '/services/s3_upload';
 
 interface FilesUploadTestProps {
     message: string;
