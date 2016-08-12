@@ -9,6 +9,17 @@ import * as s3UploadStreamFactory from './s3_upload_stream_factory';
 let appApi = express();
 let appProxy = express();
 
+let requestLogger = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+	console.log('**********************************************************************');
+	let req_address = req.connection.remoteAddress;
+	console.log('incoming request from ' + req_address + ', path='+ req.path);
+	console.log('headers: ' + JSON.stringify(req.headers));
+	console.log('**********************************************************************');
+	next();
+};
+
+appApi.use(requestLogger);
+
 appProxy.use('/', express.static(path.join(__dirname, '../public')));
 
 import * as url from 'url';
@@ -48,7 +59,11 @@ import * as httpProxy from 'http-proxy';
 
 function ProxyRestApiMiddleware3(req: express.Request, res: express.Response) {
     let proxy = httpProxy.createProxyServer();
-    proxy.web(req, res, { target: 'http://127.0.0.1:8081/services' });
+    let options: httpProxy.ServerOptions = {
+         target: 'http://127.0.0.1:8081/services'
+         ,changeOrigin: true    // change the 'host' header field to target host
+    };
+    proxy.web(req, res, options);
     proxy.on('error', (err:any) => {
         console.log('proxy error: ' + JSON.stringify(err));
         res.status(500).jsonp({'error': 'server internal error'});
@@ -56,7 +71,6 @@ function ProxyRestApiMiddleware3(req: express.Request, res: express.Response) {
     proxy.on('proxyReq', (proxyReq:http.ClientRequest, req: express.Request, res: express.Response, options: httpProxy.ServerOptions) => {
         console.log('proxyReq()');
         //proxyReq.setHeader('authorization', 'Bearer ' + bearerToken);
-        proxyReq.removeHeader('host');
     });
     proxy.on('proxyRes', (proxyRes:http.IncomingMessage, req: express.Request, res: express.Response) => {
         console.log('proxyRes()');
@@ -116,7 +130,7 @@ appApi.post('/services/upload/s3_upload', busboyPipe.get(s3UploadStreamFactory.g
     res.json(result);
 });
 
-appApi.use('*', (req: express.Request, res: express.Response) => {
+appApi.use((req: express.Request, res: express.Response) => {
     req.on('data', (data) => {});
     req.on("end" ,() => {
         res.status(400).json({err: 'bad request'});
