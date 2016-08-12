@@ -11,6 +11,7 @@
     "busboy-pipe": "git+https://github.com/wchang28/busboy-pipe.git",
     "express": "^4.14.0",
     "form-data": "^1.0.0-rc4",
+    "http-proxy": "^1.14.0",
     "lodash": "^4.14.2",
     "react": "^15.2.0",
     "react-dom": "^15.2.0",

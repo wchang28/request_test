@@ -2,6 +2,7 @@
   "name": "request_test",
   "dependencies": {
     "form-data": "registry:npm/form-data#1.0.0+20160723033700",
+    "http-proxy": "registry:npm/http-proxy#1.12.0+20160315230223",
     "lodash": "registry:npm/lodash#4.0.0+20160701205107",
     "mime": "registry:npm/mime#1.3.0+20160423043021",
     "react": "registry:npm/react#15.0.1+20160601175240",

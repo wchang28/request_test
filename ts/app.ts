@@ -42,7 +42,28 @@ function ProxyRestApiMiddleware2(req: express.Request, res: express.Response) {
     });
 }
 
-appProxy.use('/services', ProxyRestApiMiddleware2);
+//appProxy.use('/services', ProxyRestApiMiddleware2);
+
+import * as httpProxy from 'http-proxy';
+
+function ProxyRestApiMiddleware3(req: express.Request, res: express.Response) {
+    let proxy = httpProxy.createProxyServer();
+    proxy.web(req, res, { target: 'http://127.0.0.1:8081/services' });
+    proxy.on('error', (err:any) => {
+        console.log('proxy error: ' + JSON.stringify(err));
+        res.status(500).jsonp({'error': 'server internal error'});
+    });
+    proxy.on('proxyReq', function(proxyReq:http.ClientRequest, req: express.Request, res: express.Response, options: httpProxy.ServerOptions) {
+        //proxyReq.setHeader('authorization', 'Bearer ' + bearerToken);
+        proxyReq.removeHeader('host');
+        console.log('proxyReq()');
+    });
+    proxy.on('proxyRes', function(proxyRes:http.IncomingMessage, req: express.Request, res: express.Response) {
+        console.log('proxyRes()');
+    });
+}
+
+appProxy.use('/services', ProxyRestApiMiddleware3);
 
 /*
 appApi.use('/services/upload', (req: express.Request, res: express.Response) => {
@@ -93,6 +114,13 @@ appApi.post('/services/upload/s3_upload', busboyPipe.get(s3UploadStreamFactory.g
         console.log(field + ' ===> ' + JSON.stringify(value));
     }
     res.json(result);
+});
+
+appApi.use('*', (req: express.Request, res: express.Response) => {
+    req.on('data', (data) => {});
+    req.on("end" ,() => {
+        res.status(400).json({err: 'bad request'});
+    });
 });
 
 let secure_http:boolean = false;
